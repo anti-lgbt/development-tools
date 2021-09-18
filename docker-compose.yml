@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../config/traefik/dyn.yml:/etc/traefik/dyn.yml
+      - ../config/traefik/config.yml:/etc/traefik/traefik.yml
+      <%= '- ../data/ssl:/etc/traefik/certs:ro' if @config['ssl']['enabled'] %>
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "traefik.http.routers.traefik-development-tools.rule=Host(`traefik.huuhait.net`)"
+      - "traefik.http.services.traefik-development-tools.loadbalancer.server.port=8080"
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-development-tools.entrypoints=websecure"
+      - "traefik.http.routers.traefik-development-tools.tls=true"
+
+  db:
+    image: postgres:13.3
+    restart: always
+    volumes:
+      - ../data/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: changeme
+
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+      - db
+    environment:
+      ADMINER_DEFAULT_DB_DRIVER: pgsql
+      ADMINER_DEFAULT_DB_HOST: db
+      ADMINER_DEFAULT_DB_USER: root
+      ADMINER_DEFAULT_DB_PASSWORD: changeme
+    labels:
+      - "traefik.http.routers.adminer-development-tools.rule=Host(`adminer.huuhait.me`)"
+      - "traefik.http.services.adminer-development-tools.loadbalancer.server.port=8080"
+      - "traefik.enable=true"
+      - "traefik.http.routers.adminer-development-tools.entrypoints=websecure"
+      - "traefik.http.routers.adminer-development-tools.tls=true"
+
+  backend:
+    image: huuhait/learning-be
+    restart: always
+    environment:
+      - DATABASE_HOST: db
+      - DATABASE_PORT: 5432
+      - DATABASE_USER: root
+      - DATABASE_PASS: changeme
+      - DATABASE_NAME: learning
+    command: "./main"
+    labels:
+      - "traefik.http.routers.backend-development-tools.rule=Host(`learn.huuhait.me`) && PathPrefix(`/api`)"
+      - "traefik.http.services.backend-development-tools.loadbalancer.server.port=3000"
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend-development-tools.entrypoints=websecure"
+      - "traefik.http.routers.backend-development-tools.tls=true"
+
+  admin:
+    image: huuhait/learning-admin
+    restart: always
+    labels:
+      - "traefik.http.routers.admin-development-tools.rule=Host(`learn.huuhait.me`) && PathPrefix(`/admin`)"
+      - "traefik.http.services.admin-development-tools.loadbalancer.server.port=3000"
+      - "traefik.enable=true"
+      - "traefik.http.routers.admin-development-tools.entrypoints=websecure"
+      - "traefik.http.routers.admin-development-tools.tls=true"
+
+  frontend:
+    image: huuhait/learning-fe
+    restart: always
+    labels:
+      - "traefik.http.routers.frontend-development-tools.rule=Host(`learn.huuhait.me`) && PathPrefix(`/`)"
+      - "traefik.http.services.frontend-development-tools.loadbalancer.server.port=3000"
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend-development-tools.entrypoints=websecure"
+      - "traefik.http.routers.frontend-development-tools.tls=true"
+
