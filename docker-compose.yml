@@ -47,11 +47,11 @@ services:
     image: huuhait/learning-be
     restart: always
     environment:
-      - DATABASE_HOST: db
-      - DATABASE_PORT: 5432
-      - DATABASE_USER: root
-      - DATABASE_PASS: changeme
-      - DATABASE_NAME: learning
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_USER: root
+      DATABASE_PASS: changeme
+      DATABASE_NAME: learning
     command: "./main"
     labels:
       - "traefik.http.routers.backend-development-tools.rule=Host(`learn.huuhait.me`) && PathPrefix(`/api`)"
