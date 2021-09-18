@@ -21,10 +21,16 @@ services:
     image: postgres:13.3
     restart: always
     volumes:
-      - ../data/db:/var/lib/postgresql/data
+      - ./data/db:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: changeme
+
+  redis:
+    image: redis:4.0.10
+    restart: always
+    volumes:
+      - ./data/redis:/data
 
   adminer:
     image: adminer
@@ -52,6 +58,7 @@ services:
       DATABASE_USER: root
       DATABASE_PASS: changeme
       DATABASE_NAME: learning
+      REDIS_URL: redis://redis:6379
     command: "./main"
     labels:
       - "traefik.http.routers.backend-development-tools.rule=Host(`learn.huuhait.me`) && PathPrefix(`/api`)"
@@ -61,7 +68,7 @@ services:
       - "traefik.http.routers.backend-development-tools.tls=true"
 
   admin:
-    image: huuhait/learning-admin
+    image: ubuntu
     restart: always
     labels:
       - "traefik.http.routers.admin-development-tools.rule=Host(`learn.huuhait.me`) && PathPrefix(`/admin`)"
