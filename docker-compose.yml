@@ -59,6 +59,8 @@ services:
       DATABASE_PASS: changeme
       DATABASE_NAME: learning
       REDIS_URL: redis://redis:6379
+    volumes:
+      - ./data/uploads:/app/uploads
     command: "./main"
     labels:
       - "traefik.http.routers.backend-development-tools.rule=Host(`learn.huuhait.me`) && PathPrefix(`/api`)"
