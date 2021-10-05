@@ -49,7 +49,7 @@ services:
       - "traefik.http.routers.adminer-development-tools.entrypoints=websecure"
       - "traefik.http.routers.adminer-development-tools.tls=true"
 
-  backend:
+  backend-api:
     image: huuhait/learning-be
     restart: always
     environment:
@@ -61,13 +61,25 @@ services:
       REDIS_URL: redis://redis:6379
     volumes:
       - ./data/uploads:/app/uploads
-    command: "./main"
+    command: "./api"
     labels:
       - "traefik.http.routers.backend-development-tools.rule=Host(`learn.huuhait.me`) && PathPrefix(`/api`)"
       - "traefik.http.services.backend-development-tools.loadbalancer.server.port=3000"
       - "traefik.enable=true"
       - "traefik.http.routers.backend-development-tools.entrypoints=websecure"
       - "traefik.http.routers.backend-development-tools.tls=true"
+
+  backend-cron:
+    image: huuhait/learning-be
+    restart: always
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_USER: root
+      DATABASE_PASS: changeme
+      DATABASE_NAME: learning
+      REDIS_URL: redis://redis:6379
+    command: "./cron"
 
   admin:
     image: ubuntu
